@@ -1,217 +1,250 @@
 #!/usr/bin/env python3
 """
-OmniAGI - Main Entry Point
+OmniAGI CLI - Command Line Interface.
 
-Start and interact with the AGI system.
+Usage:
+    omni chat      - Interactive chat with AGI
+    omni test      - Run test suite
+    omni status    - Show system status
+    omni rag add   - Add document to knowledge base
+    omni rag search - Search knowledge base
 """
 
-import argparse
 import sys
 from pathlib import Path
 
+# Add project to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="OmniAGI - Artificial General Intelligence System",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  omniagi start          Start the AGI system
-  omniagi think          Generate a thought
-  omniagi status         Show system status
-  omniagi benchmark      Run capability benchmarks
-  omniagi improve        Propose self-improvement
-        """,
-    )
-    
-    subparsers = parser.add_subparsers(dest="command", required=True)
-    
-    # Start command
-    start = subparsers.add_parser("start", help="Start the AGI system")
-    start.add_argument("--model", default="rwkv-6-7b", help="Model to use")
-    start.add_argument("--thinking", action="store_true", help="Enable background thinking")
-    
-    # Think command
-    think = subparsers.add_parser("think", help="Generate a thought")
-    think.add_argument("prompt", nargs="?", default="What are you thinking about?")
-    
-    # Status command
-    subparsers.add_parser("status", help="Show system status")
-    
-    # Benchmark command
-    benchmark = subparsers.add_parser("benchmark", help="Run capability benchmarks")
-    benchmark.add_argument("--arc", action="store_true", help="Run ARC benchmark")
-    
-    # Improve command
-    subparsers.add_parser("improve", help="Propose self-improvement")
-    
-    # Setup command
-    setup = subparsers.add_parser("setup", help="Setup RWKV model")
-    setup.add_argument("--model", default="rwkv-6-7b", help="Model to download")
-    
-    args = parser.parse_args()
-    
-    if args.command == "start":
-        cmd_start(args)
-    elif args.command == "think":
-        cmd_think(args)
-    elif args.command == "status":
-        cmd_status()
-    elif args.command == "benchmark":
-        cmd_benchmark(args)
-    elif args.command == "improve":
-        cmd_improve()
-    elif args.command == "setup":
-        cmd_setup(args)
+import click
+import structlog
+
+logger = structlog.get_logger()
 
 
-def cmd_start(args):
-    """Start the AGI system."""
-    print("🧠 Starting OmniAGI...")
+@click.group()
+@click.version_option(version="1.0.0", prog_name="OmniAGI")
+def cli():
+    """OmniAGI - Artificial General Intelligence Framework"""
+    pass
+
+
+@cli.command()
+@click.option("--model", default="models/rwkv/rwkv-6-3b.pth", help="Model path")
+@click.option("--strategy", default="cuda fp16 -> cpu fp32", help="Loading strategy")
+def chat(model, strategy):
+    """Interactive chat with OmniAGI."""
+    click.echo("🧠 OmniAGI Chat")
+    click.echo("=" * 50)
+    click.echo("Loading model...")
     
     try:
-        from omniagi.agi_controller import get_agi
+        from rwkv.model import RWKV
+        from rwkv.utils import PIPELINE, PIPELINE_ARGS
         
-        agi = get_agi(model_name=args.model)
-        if agi.initialize():
-            print("✅ AGI initialized successfully")
-            
-            if args.thinking:
-                if agi.start_thinking():
-                    print("💭 Background thinking enabled")
-            
-            # Print status
-            status = agi.get_status()
-            print(f"\n📊 Status:")
-            print(f"   State: {status.state.name}")
-            print(f"   LLM: {'✅' if status.llm_loaded else '❌'}")
-            print(f"   Safety: {'✅' if status.safety_active else '❌'}")
-            print(f"   Thinking: {'✅' if status.thinking_active else '❌'}")
-            
-        else:
-            print("❌ AGI initialization failed")
-            sys.exit(1)
-            
-    except ImportError as e:
-        print(f"❌ Missing dependency: {e}")
-        print("   Run: pip install -e .[rwkv]")
-        sys.exit(1)
-
-
-def cmd_think(args):
-    """Generate a thought."""
-    try:
-        from omniagi.agi_controller import get_agi
+        rwkv = RWKV(model, strategy=strategy)
+        pipeline = PIPELINE(rwkv, 'rwkv_vocab_v20230424')
+        args = PIPELINE_ARGS(temperature=0.7, top_p=0.9)
         
-        agi = get_agi()
-        agi.initialize()
+        click.echo("✅ Model loaded!")
+        click.echo("Type 'quit' to exit, 'clear' to clear context.\n")
         
-        print(f"💭 Thinking about: {args.prompt}\n")
-        response = agi.think(args.prompt)
-        print(response)
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        sys.exit(1)
-
-
-def cmd_status():
-    """Show system status."""
-    try:
-        from omniagi.agi_controller import get_agi
-        
-        agi = get_agi()
-        status = agi.get_status()
-        data = agi.to_dict()
-        
-        print("📊 OmniAGI Status")
-        print("=" * 40)
-        print(f"State: {status.state.name}")
-        print(f"Uptime: {status.uptime_seconds:.0f}s")
-        print()
-        print("Components:")
-        for name, active in data["components"].items():
-            icon = "✅" if active else "❌"
-            print(f"  {icon} {name}")
-        print()
-        print(f"Total Thoughts: {status.total_thoughts}")
-        print(f"Total Actions: {status.total_actions}")
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
-
-
-def cmd_benchmark(args):
-    """Run benchmarks."""
-    try:
-        if args.arc:
-            from omniagi.rsi.arc_benchmark import ARCBenchmark
-            
-            print("🧪 Running ARC Benchmark...")
-            arc = ARCBenchmark()
-            
-            # Show available tasks
-            tasks = arc.get_all_tasks()
-            print(f"   Tasks available: {len(tasks)}")
-            
-            stats = arc.get_stats()
-            print(f"\n📊 ARC Stats:")
-            print(f"   Current Accuracy: {stats['accuracy']*100:.1f}%")
-            print(f"   Human Baseline: {stats['human_baseline']*100:.1f}%")
-            print(f"   AGI Threshold: 50%")
-            print(f"   Is AGI Level: {'✅' if stats['is_agi_level'] else '❌'}")
-        else:
-            from omniagi.rsi.evaluator import CapabilityEvaluator
-            
-            print("🧪 Running Capability Benchmark...")
-            evaluator = CapabilityEvaluator()
-            stats = evaluator.get_stats()
-            
-            print(f"\n📊 Capability Profile:")
-            for category, score in stats.get("capability_profile", {}).items():
-                bar = "█" * int(score * 10) + "░" * (10 - int(score * 10))
-                print(f"   {category}: {bar} {score*100:.0f}%")
-            
-            print(f"\n⚠️ Weakest Areas:")
-            for area, score in stats.get("weakest_areas", []):
-                print(f"   - {area}: {score*100:.0f}%")
+        context = ""
+        while True:
+            try:
+                user_input = click.prompt("You", type=str)
                 
-    except Exception as e:
-        print(f"❌ Error: {e}")
-
-
-def cmd_improve():
-    """Propose self-improvement."""
-    try:
-        from omniagi.agi_controller import get_agi
-        
-        agi = get_agi()
-        agi.initialize()
-        
-        print("🔧 Proposing self-improvement...\n")
-        proposal = agi.propose_improvement()
-        
-        if proposal:
-            print(f"📝 Improvement Proposal:")
-            print(f"   Type: {proposal.get('change_type', 'unknown')}")
-            print(f"   Description: {proposal.get('description', 'N/A')}")
-            print(f"   Impact: {proposal.get('impact', 0)*100:.0f}%")
-            print(f"   Risk: {proposal.get('risk', 0)*100:.0f}%")
-        else:
-            print("No improvements proposed at this time.")
-            
-    except Exception as e:
-        print(f"❌ Error: {e}")
-
-
-def cmd_setup(args):
-    """Setup RWKV model."""
-    import subprocess
-    import sys
+                if user_input.lower() == "quit":
+                    click.echo("Goodbye! 👋")
+                    break
+                
+                if user_input.lower() == "clear":
+                    context = ""
+                    click.echo("Context cleared.\n")
+                    continue
+                
+                # Generate response
+                prompt = f"{context}User: {user_input}\nAssistant:"
+                response = pipeline.generate(prompt, token_count=100, args=args)
+                
+                # Update context
+                context = f"{prompt}{response}\n"
+                
+                click.echo(f"AGI: {response.strip()}\n")
+                
+            except (KeyboardInterrupt, EOFError):
+                click.echo("\nGoodbye! 👋")
+                break
     
-    script = Path(__file__).parent.parent / "scripts" / "setup_rwkv.py"
-    subprocess.run([sys.executable, str(script)])
+    except Exception as e:
+        click.echo(f"❌ Error: {e}")
+        sys.exit(1)
+
+
+@cli.command()
+def status():
+    """Show OmniAGI system status."""
+    click.echo("📊 OmniAGI Status")
+    click.echo("=" * 50)
+    
+    # Check modules
+    modules = {
+        "consciousness": "omniagi.consciousness.ConsciousnessEngine",
+        "reasoning": "omniagi.reasoning.SymbolicEngine",
+        "memory": "omniagi.memory.episodic.EpisodicMemory",
+        "creativity": "omniagi.creativity.CreativeEngine",
+        "multimodal": "omniagi.multimodal.lightweight.LightweightMultiModal",
+        "rag": "omniagi.memory.rag.RAGSystem",
+    }
+    
+    click.echo("\nModules:")
+    for name, path in modules.items():
+        try:
+            parts = path.rsplit(".", 1)
+            module = __import__(parts[0], fromlist=[parts[1]])
+            getattr(module, parts[1])
+            click.echo(f"  ✅ {name}")
+        except Exception as e:
+            click.echo(f"  ❌ {name}: {e}")
+    
+    # Check GPU
+    click.echo("\nHardware:")
+    try:
+        import torch
+        if torch.cuda.is_available():
+            name = torch.cuda.get_device_name(0)
+            mem = torch.cuda.get_device_properties(0).total_memory / 1e9
+            click.echo(f"  GPU: {name} ({mem:.1f} GB)")
+        else:
+            click.echo("  GPU: Not available")
+    except:
+        click.echo("  GPU: PyTorch not found")
+    
+    # Check models
+    click.echo("\nModels:")
+    model_dir = Path("models/rwkv")
+    if model_dir.exists():
+        for f in model_dir.glob("*.pth"):
+            size = f.stat().st_size / 1e9
+            click.echo(f"  {f.name}: {size:.1f} GB")
+    else:
+        click.echo("  No models found")
+
+
+@cli.command()
+def test():
+    """Run OmniAGI test suite."""
+    click.echo("🧪 OmniAGI Test Suite")
+    click.echo("=" * 50)
+    
+    results = {}
+    
+    # Test 1: Consciousness
+    click.echo("\n1. Consciousness...")
+    try:
+        from omniagi.consciousness import ConsciousnessEngine
+        c = ConsciousnessEngine()
+        c.awaken()
+        r = c.reflect()
+        results["consciousness"] = r["state"] == "METACONSCIOUS"
+    except Exception as e:
+        results["consciousness"] = False
+        click.echo(f"   Error: {e}")
+    
+    # Test 2: Reasoning
+    click.echo("2. Symbolic Reasoning...")
+    try:
+        from omniagi.reasoning import SymbolicEngine
+        e = SymbolicEngine()
+        e.add_proposition("test", True)
+        results["reasoning"] = True
+    except Exception as e:
+        results["reasoning"] = False
+    
+    # Test 3: RAG
+    click.echo("3. RAG System...")
+    try:
+        from omniagi.memory.rag import RAGSystem
+        r = RAGSystem()
+        r.initialize()
+        results["rag"] = True
+    except Exception as e:
+        results["rag"] = False
+    
+    # Test 4: MultiModal
+    click.echo("4. MultiModal...")
+    try:
+        from omniagi.multimodal.lightweight import LightweightMultiModal
+        m = LightweightMultiModal()
+        m.initialize()
+        results["multimodal"] = True
+    except Exception as e:
+        results["multimodal"] = False
+    
+    # Summary
+    click.echo("\n" + "=" * 50)
+    passed = sum(1 for v in results.values() if v)
+    total = len(results)
+    click.echo(f"Results: {passed}/{total} passed")
+    
+    for name, status in results.items():
+        icon = "✅" if status else "❌"
+        click.echo(f"  {icon} {name}")
+
+
+@cli.group()
+def rag():
+    """RAG (Knowledge Base) commands."""
+    pass
+
+
+@rag.command("add")
+@click.argument("text")
+@click.option("--category", default="general", help="Document category")
+def rag_add(text, category):
+    """Add a document to the knowledge base."""
+    from omniagi.memory.rag import RAGSystem
+    
+    r = RAGSystem()
+    r.initialize()
+    doc_id = r.add_document(text, {"category": category})
+    
+    click.echo(f"✅ Added document: {doc_id}")
+    click.echo(f"   Total docs: {r.get_stats()['documents']}")
+
+
+@rag.command("search")
+@click.argument("query")
+@click.option("--n", default=3, help="Number of results")
+def rag_search(query, n):
+    """Search the knowledge base."""
+    from omniagi.memory.rag import RAGSystem
+    
+    r = RAGSystem()
+    r.initialize()
+    results = r.search(query, n_results=n)
+    
+    click.echo(f"🔍 Results for: {query}")
+    click.echo("-" * 40)
+    
+    for i, result in enumerate(results):
+        click.echo(f"{i+1}. {result['content'][:100]}...")
+        click.echo(f"   Distance: {result['distance']:.3f}")
+
+
+@rag.command("stats")
+def rag_stats():
+    """Show RAG statistics."""
+    from omniagi.memory.rag import RAGSystem
+    
+    r = RAGSystem()
+    r.initialize()
+    stats = r.get_stats()
+    
+    click.echo("📊 RAG Statistics")
+    click.echo(f"  Collection: {stats['collection']}")
+    click.echo(f"  Documents: {stats['documents']}")
 
 
 if __name__ == "__main__":
-    main()
+    cli()
