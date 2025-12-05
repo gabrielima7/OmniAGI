@@ -65,7 +65,7 @@ class ChainOfThoughtSolver:
         Solve an ARC task using Chain-of-Thought.
         """
         if task_type in self._prompts:
-            return self._prompts[task_type](problem)
+            return self._prompts[task_type](problem, task_type)
         
         # Fallback to general solver
         return self._solve_general(task_type, problem)
@@ -77,7 +77,7 @@ class ChainOfThoughtSolver:
         
         return self._pipeline.generate(prompt, token_count=max_tokens, args=self._args)
     
-    def _solve_reverse(self, problem: str) -> ARCSolution:
+    def _solve_reverse(self, problem: str, task_type: str = "reverse") -> ARCSolution:
         """Solve reverse/mirror tasks."""
         prompt = f"""Step-by-step: Reverse the sequence.
 
@@ -92,15 +92,15 @@ Example: a b c d -> Think: Read right to left -> Answer: d c b a
         
         return ARCSolution("reverse", answer, "Reversed sequence", 0.9)
     
-    def _solve_multiply(self, problem: str) -> ARCSolution:
+    def _solve_multiply(self, problem: str, task_type: str = "double") -> ARCSolution:
         """Solve multiplication tasks (double, triple, etc)."""
-        # Parse the multiplier from problem context
-        if "double" in problem.lower() or "* 2" in problem or "x 2" in problem:
-            mult = 2
-        elif "triple" in problem.lower() or "* 3" in problem:
+        # Parse the multiplier from task type first, then problem
+        if task_type == "triple" or "triple" in problem.lower() or "* 3" in problem:
             mult = 3
+        elif task_type == "quadruple" or "* 4" in problem:
+            mult = 4
         else:
-            mult = 2
+            mult = 2  # default double
         
         # Extract number
         numbers = re.findall(r'\d+', problem)
@@ -109,7 +109,7 @@ Example: a b c d -> Think: Read right to left -> Answer: d c b a
             answer = str(last_num * mult)
             
             return ARCSolution(
-                "multiply",
+                task_type,
                 answer,
                 f"Calculated: {last_num} x {mult} = {answer}",
                 1.0
@@ -126,49 +126,42 @@ Rule: Multiply by {mult}
         out = self._generate(prompt, 10)
         answer = re.findall(r'\d+', out)
         
-        return ARCSolution("multiply", answer[0] if answer else "", "", 0.7)
+        return ARCSolution(task_type, answer[0] if answer else "", "", 0.7)
     
-    def _solve_arithmetic(self, problem: str) -> ARCSolution:
+    def _solve_arithmetic(self, problem: str, task_type: str = "arithmetic") -> ARCSolution:
         """Solve arithmetic tasks."""
-        # Detect operation
-        if "subtract" in problem.lower() or "minus" in problem.lower() or "- 1" in problem:
-            op = "subtract"
-            op_val = 1
-        elif "add" in problem.lower() or "+ 1" in problem:
-            op = "add"
-            op_val = 1
-        elif "sum" in problem.lower() or "+" in problem:
-            op = "sum"
-            # Try to parse sum
-            match = re.search(r'(\d+)\s*\+\s*(\d+)\s*=', problem)
-            if match:
-                # Find the pattern and continue
-                pass
-            op_val = 0
-        else:
-            op = "unknown"
-            op_val = 0
         
-        # Extract last number
-        numbers = re.findall(r'\d+', problem)
-        if numbers and op in ["subtract", "add"]:
-            last_num = int(numbers[-1])
-            if op == "subtract":
-                answer = str(last_num - op_val)
-            else:
-                answer = str(last_num + op_val)
-            
-            return ARCSolution(op, answer, f"{op}: {last_num}", 1.0)
+        # Try to find a-b pattern first (100 - 45, etc)
+        sub_match = re.search(r'(\d+)\s*-\s*(\d+)', problem)
+        if sub_match:
+            a, b = int(sub_match.group(1)), int(sub_match.group(2))
+            result = a - b
+            return ARCSolution("subtract", str(result), f"Subtract: {a} - {b} = {result}", 1.0)
         
-        # Sum: find pattern like "3+4="
-        sum_match = re.search(r'(\d+)\s*\+\s*(\d+)\s*=\s*$', problem.replace(" ", ""))
-        if sum_match:
-            a, b = int(sum_match.group(1)), int(sum_match.group(2))
-            return ARCSolution("sum", str(a + b), f"Sum: {a}+{b}={a+b}", 1.0)
+        # Try a+b pattern
+        add_match = re.search(r'(\d+)\s*\+\s*(\d+)', problem)
+        if add_match:
+            a, b = int(add_match.group(1)), int(add_match.group(2))
+            result = a + b
+            return ARCSolution("sum", str(result), f"Sum: {a} + {b} = {result}", 1.0)
         
-        return ARCSolution(op, "", "Could not parse", 0.3)
+        # Try a*b pattern
+        mul_match = re.search(r'(\d+)\s*\*\s*(\d+)', problem)
+        if mul_match:
+            a, b = int(mul_match.group(1)), int(mul_match.group(2))
+            result = a * b
+            return ARCSolution("multiply", str(result), f"Multiply: {a} * {b} = {result}", 1.0)
+        
+        # Try a/b pattern
+        div_match = re.search(r'(\d+)\s*/\s*(\d+)', problem)
+        if div_match:
+            a, b = int(div_match.group(1)), int(div_match.group(2))
+            result = a // b if b != 0 else 0
+            return ARCSolution("divide", str(result), f"Divide: {a} / {b} = {result}", 1.0)
+        
+        return ARCSolution(task_type, "", "Could not parse arithmetic", 0.3)
     
-    def _solve_power(self, problem: str) -> ARCSolution:
+    def _solve_power(self, problem: str, task_type: str = "square") -> ARCSolution:
         """Solve power tasks (square, cube, etc)."""
         # Detect power
         if "square" in problem.lower():
@@ -192,7 +185,7 @@ Rule: Multiply by {mult}
         
         return ARCSolution("power", "", "Could not find number", 0.3)
     
-    def _solve_sequence(self, problem: str) -> ARCSolution:
+    def _solve_sequence(self, problem: str, task_type: str = "sequence") -> ARCSolution:
         """Solve sequence continuation tasks."""
         # Find sequences of numbers
         numbers = [int(n) for n in re.findall(r'\d+', problem)]
@@ -216,7 +209,7 @@ Rule: Multiply by {mult}
         
         return ARCSolution("sequence", "", "Could not parse", 0.3)
     
-    def _solve_minmax(self, problem: str) -> ARCSolution:
+    def _solve_minmax(self, problem: str, task_type: str = "minmax") -> ARCSolution:
         """Solve min/max tasks."""
         is_min = "min" in problem.lower()
         
@@ -237,7 +230,7 @@ Rule: Multiply by {mult}
         
         return ARCSolution("minmax", "", "Could not parse", 0.3)
     
-    def _solve_length(self, problem: str) -> ARCSolution:
+    def _solve_length(self, problem: str, task_type: str = "length") -> ARCSolution:
         """Solve length/count tasks."""
         # Find the last word to measure
         words = re.findall(r'[a-zA-Z]+', problem)
@@ -261,7 +254,7 @@ Rule: Multiply by {mult}
         
         return ARCSolution("length", "", "Could not find word", 0.3)
     
-    def _solve_count(self, problem: str) -> ARCSolution:
+    def _solve_count(self, problem: str, task_type: str = "count") -> ARCSolution:
         """Solve counting tasks."""
         # Count specific digit or character
         match = re.search(r'count.*?(\d)', problem.lower())
