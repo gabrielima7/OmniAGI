@@ -21,17 +21,17 @@ OmniAGI é uma infraestrutura de **Inteligência Artificial Geral** projetada pa
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      INTERFACES                              │
+│                      INTERFACES                             │
 │              CLI Unificada  │  API Server (OpenAI)          │
 ├─────────────────────────────────────────────────────────────┤
 │                 CAMADA DE RACIOCÍNIO (Python)               │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────────────┐   │
-│  │  Agent  │ │ Memory  │ │  Tools  │ │   Life Daemon   │   │
-│  ├─────────┤ ├─────────┤ ├─────────┤ ├─────────────────┤   │
-│  │  Swarm  │ │ Vector  │ │Ouroboros│ │   Multimodal    │   │
-│  └─────────┘ └─────────┘ └─────────┘ └─────────────────┘   │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────────────┐    │
+│  │  Agent  │ │ Memory  │ │  Tools  │ │   Life Daemon   │    │
+│  ├─────────┤ ├─────────┤ ├─────────┤ ├─────────────────┤    │
+│  │  Swarm  │ │ Vector  │ │Ouroboros│ │   Multimodal    │    │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────────────┘    │
 ├─────────────────────────────────────────────────────────────┤
-│                 MOTOR DE PERFORMANCE (Rust)                  │
+│                 MOTOR DE PERFORMANCE (Rust)                 │
 │        LLM Inference  │  Quantization  │  GPU/CPU Backend   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -73,13 +73,13 @@ pip install -e ".[minimal]"
 
 ### Modelos Recomendados por Hardware
 
-| Hardware | Modelo Recomendado | RAM Necessária |
-|----------|-------------------|----------------|
-| 4GB RAM | Qwen2.5-1.5B-Q4 | ~2GB |
-| 8GB RAM | Llama-3.2-3B-Q4 | ~3GB |
-| 8GB RAM | Mistral-7B-Q4 | ~4.5GB |
-| 16GB RAM | Llama-3.1-8B-Q4 | ~5GB |
-| 16GB+ RAM | Mixtral-8x7B-Q4 | ~26GB |
+| Hardware  | Modelo Recomendado | RAM Necessária |
+|---------- |------------------- |----------------|
+| 4GB RAM   | Qwen2.5-1.5B-Q4    | ~2GB |
+| 8GB RAM   | Llama-3.2-3B-Q4    | ~3GB |
+| 8GB RAM   | Mistral-7B-Q4      | ~4.5GB |
+| 16GB RAM  | Llama-3.1-8B-Q4    | ~5GB |
+| 16GB+ RAM | Mixtral-8x7B-Q4    | ~26GB |
 
 > 💡 **Dica**: Use modelos quantizados em Q4_K_M para melhor equilíbrio entre qualidade e eficiência.
 
@@ -133,15 +133,15 @@ export OMNI_MODEL_GPU_LAYERS=-1  # -1 = todas na GPU (se disponível)
 
 ## 🧩 Componentes
 
-| Componente | Descrição |
-|------------|-----------|
-| **Core Engine** | Motor de inferência LLM (llama.cpp + Rust) |
-| **Agent System** | Framework de agentes autônomos com ReAct |
-| **Memory** | Memória vetorial (ChromaDB) + persistente |
-| **Tools** | Filesystem, Code Sandbox, Web, Git |
-| **Life Daemon** | Ciclo de vida autônomo |
-| **Swarm** | Arquitetura multi-agente |
-| **Multimodal** | Vision (PIL) + Audio (Whisper) |
+| Componente       | Descrição                                  |
+|------------------|--------------------------------------------|
+| **Core Engine**  | Motor de inferência LLM (llama.cpp + Rust) |
+| **Agent System** | Framework de agentes autônomos com ReAct   |
+| **Memory**       | Memória vetorial (ChromaDB) + persistente  |
+| **Tools**        | Filesystem, Code Sandbox, Web, Git         |
+| **Life Daemon**  | Ciclo de vida autônomo                     |
+| **Swarm**        | Arquitetura multi-agente                   |
+| **Multimodal**   | Vision (PIL) + Audio (Whisper)             |
 
 ## 🎯 Roadmap para AGI
 
