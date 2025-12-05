@@ -1,0 +1,121 @@
+[project]
+name = "omniagi"
+version = "0.1.0"
+description = "Sistema Operacional Cognitivo Soberano, Descentralizado e Autônomo"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.11"
+authors = [
+    { name = "OmniAGI Team" }
+]
+keywords = ["ai", "llm", "agent", "autonomous", "agi"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    # Core LLM
+    "llama-cpp-python>=0.2.50",
+    
+    # Agent Framework
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    
+    # Memory & Vector Store
+    "chromadb>=0.4.20",
+    "numpy>=1.26.0",
+    
+    # API Server
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "httpx>=0.26.0",
+    
+    # CLI
+    "typer[all]>=0.9.0",
+    "rich>=13.7.0",
+    
+    # Tools
+    "aiohttp>=3.9.0",
+    "beautifulsoup4>=4.12.0",
+    "gitpython>=3.1.40",
+    "aiofiles>=23.2.0",
+    
+    # Multimodal
+    "pillow>=10.2.0",
+    
+    # Utilities
+    "python-dotenv>=1.0.0",
+    "structlog>=24.1.0",
+    "tenacity>=8.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.9",
+    "mypy>=1.8.0",
+    "pre-commit>=3.6.0",
+]
+
+# GPU acceleration
+cuda = [
+    "llama-cpp-python[cuda]>=0.2.50",
+]
+
+metal = [
+    "llama-cpp-python[metal]>=0.2.50",
+]
+
+# Audio processing (optional, adds ~1GB)
+audio = [
+    "openai-whisper>=20231117",
+    "soundfile>=0.12.0",
+]
+
+# Minimal installation (low RAM systems)
+minimal = [
+    "pydantic>=2.5.0",
+    "typer>=0.9.0",
+    "rich>=13.7.0",
+]
+
+[project.scripts]
+omni = "cli.main:app"
+
+[project.urls]
+Homepage = "https://github.com/omniagi/OmniAGI"
+Documentation = "https://github.com/omniagi/OmniAGI/docs"
+Repository = "https://github.com/omniagi/OmniAGI"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["omniagi", "cli", "server"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --cov=omniagi --cov-report=term-missing"

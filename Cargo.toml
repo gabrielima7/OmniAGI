@@ -1,0 +1,42 @@
+[workspace]
+members = ["core"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["OmniAGI Team"]
+repository = "https://github.com/omniagi/OmniAGI"
+
+[workspace.dependencies]
+# ML Framework
+candle-core = "0.4"
+candle-nn = "0.4"
+candle-transformers = "0.4"
+
+# Async Runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Python Bindings
+pyo3 = { version = "0.20", features = ["extension-module"] }
+
+# Parallelism
+rayon = "1.8"
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Utilities
+half = { version = "2.3", features = ["num-traits"] }
+byteorder = "1.5"
+memmap2 = "0.9"

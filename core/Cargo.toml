@@ -1,0 +1,51 @@
+[package]
+name = "omniagi-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "High-performance LLM inference engine for OmniAGI"
+
+[lib]
+name = "omniagi_core"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# ML Framework
+candle-core.workspace = true
+candle-nn.workspace = true
+candle-transformers.workspace = true
+
+# Async Runtime
+tokio.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Python Bindings
+pyo3.workspace = true
+
+# Parallelism
+rayon.workspace = true
+
+# Error Handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Utilities
+half.workspace = true
+byteorder.workspace = true
+memmap2.workspace = true
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "inference"
+harness = false
