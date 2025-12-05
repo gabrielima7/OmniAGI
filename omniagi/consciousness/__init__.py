@@ -10,6 +10,18 @@ from omniagi.consciousness.engine import (
     ConsciousThought,
 )
 
+from omniagi.consciousness.inner_dialogue import (
+    InnerDialogue,
+    AttentionController,
+    StreamOfConsciousness,
+)
+
+from omniagi.consciousness.emergence import (
+    EmergenceDetector,
+    EmergentBehavior,
+    EmergenceType,
+)
+
 __all__ = [
     "ConsciousnessEngine",
     "ConsciousnessState",
@@ -18,4 +30,11 @@ __all__ = [
     "SelfModel",
     "Qualia",
     "ConsciousThought",
+    "InnerDialogue",
+    "AttentionController",
+    "StreamOfConsciousness",
+    "EmergenceDetector",
+    "EmergentBehavior",
+    "EmergenceType",
 ]
+
