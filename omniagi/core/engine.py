@@ -9,11 +9,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterator, Callable, Any
 
-from llama_cpp import Llama
+# Make llama_cpp optional
+try:
+    from llama_cpp import Llama
+    LLAMA_CPP_AVAILABLE = True
+except ImportError:
+    Llama = None
+    LLAMA_CPP_AVAILABLE = False
 
 from omniagi.core.config import get_config, Config
 
 logger = structlog.get_logger()
+
 
 
 @dataclass
@@ -101,6 +108,9 @@ class Engine:
         Args:
             model_path: Path to the model. Uses initialized path if None.
         """
+        if not LLAMA_CPP_AVAILABLE:
+            raise ImportError("llama_cpp not installed. Install with: pip install llama-cpp-python")
+        
         if model_path:
             self._model_path = Path(model_path)
         
@@ -111,6 +121,7 @@ class Engine:
             raise FileNotFoundError(f"Model not found: {self._model_path}")
         
         logger.info("Loading model", path=str(self._model_path))
+
         
         # Determine GPU layers
         n_gpu_layers = self.config.model.gpu_layers
