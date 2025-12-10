@@ -246,5 +246,119 @@ def rag_stats():
     click.echo(f"  Documents: {stats['documents']}")
 
 
+# ===== EXTENSION COMMANDS =====
+
+@cli.group()
+def ext():
+    """Extension management commands."""
+    pass
+
+
+def _get_all_extensions():
+    """Get all available extensions."""
+    from omniagi.extensions import DeveloperExtension, MemoryExtension, WebExtension
+    return {
+        "developer": DeveloperExtension,
+        "memory": MemoryExtension,
+        "web": WebExtension,
+    }
+
+
+@ext.command("list")
+@click.option("--verbose", "-v", is_flag=True, help="Show tools for each extension")
+def ext_list(verbose):
+    """List available extensions."""
+    click.echo("📦 OmniAGI Extensions")
+    click.echo("=" * 50)
+    
+    extensions = _get_all_extensions()
+    
+    for name, ext_class in extensions.items():
+        try:
+            ext = ext_class()
+            click.echo(f"\n🔌 {name}")
+            click.echo(f"   {ext.description}")
+            click.echo(f"   Version: {ext.version}")
+            
+            if verbose:
+                click.echo(f"   Tools ({len(ext.tools)}):")
+                for tool in ext.tools:
+                    click.echo(f"     - {tool.name}: {tool.description}")
+        except Exception as e:
+            click.echo(f"\n❌ {name}: {e}")
+
+
+@ext.command("info")
+@click.argument("name")
+def ext_info(name):
+    """Show detailed information about an extension."""
+    extensions = _get_all_extensions()
+    
+    if name not in extensions:
+        click.echo(f"❌ Extension not found: {name}")
+        click.echo(f"   Available: {', '.join(extensions.keys())}")
+        return
+    
+    ext = extensions[name]()
+    
+    click.echo(f"📦 Extension: {name}")
+    click.echo("=" * 50)
+    click.echo(f"Description: {ext.description}")
+    click.echo(f"Version: {ext.version}")
+    click.echo(f"\n🔧 Tools ({len(ext.tools)}):")
+    
+    for tool in ext.tools:
+        click.echo(f"\n  {tool.name}")
+        click.echo(f"  └─ {tool.description}")
+        if tool.parameters:
+            click.echo(f"     Parameters:")
+            for param, info in tool.parameters.items():
+                ptype = info.get("type", "any")
+                desc = info.get("description", "")
+                click.echo(f"       - {param} ({ptype}): {desc}")
+
+
+@ext.command("run")
+@click.argument("extension")
+@click.argument("tool")
+@click.option("--arg", "-a", multiple=True, help="Tool argument as key=value")
+def ext_run(extension, tool, arg):
+    """Run a tool from an extension."""
+    extensions = _get_all_extensions()
+    
+    if extension not in extensions:
+        click.echo(f"❌ Extension not found: {extension}")
+        return
+    
+    # Parse arguments
+    kwargs = {}
+    for a in arg:
+        if "=" in a:
+            key, value = a.split("=", 1)
+            # Try to parse as JSON for complex types
+            try:
+                import json
+                value = json.loads(value)
+            except:
+                pass
+            kwargs[key] = value
+    
+    click.echo(f"🔧 Running {extension}.{tool}...")
+    
+    try:
+        ext = extensions[extension]()
+        ext.activate()
+        result = ext.execute_tool(tool, **kwargs)
+        
+        if isinstance(result, dict):
+            import json
+            click.echo(json.dumps(result, indent=2))
+        else:
+            click.echo(result)
+    except Exception as e:
+        click.echo(f"❌ Error: {e}")
+
+
 if __name__ == "__main__":
     cli()
+
