@@ -7,7 +7,7 @@ Allows OmniAGI to be used as an MCP server for Goose and other clients.
 from __future__ import annotations
 
 import json
-import structlog
+import logging
 from typing import Any, Callable
 
 from omniagi.mcp.protocol import (
@@ -15,7 +15,13 @@ from omniagi.mcp.protocol import (
 )
 from omniagi.extensions.base import Extension, ExtensionManager, get_extension_manager
 
-logger = structlog.get_logger()
+# Make structlog optional
+try:
+    import structlog
+    logger = structlog.get_logger()
+except ImportError:
+    logger = logging.getLogger(__name__)
+
 
 
 class MCPServer:

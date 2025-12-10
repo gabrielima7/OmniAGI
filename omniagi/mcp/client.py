@@ -7,14 +7,20 @@ Allows OmniAGI to connect to external MCP servers.
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
-import structlog
 from typing import Any
 from pathlib import Path
 
 from omniagi.mcp.protocol import MCPRequest, MCPResponse, MCPTool
 
-logger = structlog.get_logger()
+# Make structlog optional
+try:
+    import structlog
+    logger = structlog.get_logger()
+except ImportError:
+    logger = logging.getLogger(__name__)
+
 
 
 class MCPClient:

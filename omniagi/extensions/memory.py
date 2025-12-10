@@ -8,14 +8,20 @@ Inspired by Goose's Memory extension.
 from __future__ import annotations
 
 import json
-import structlog
+import logging
 from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass, field, asdict
 
 from omniagi.extensions.base import Extension, Tool
 
-logger = structlog.get_logger()
+# Make structlog optional
+try:
+    import structlog
+    logger = structlog.get_logger()
+except ImportError:
+    logger = logging.getLogger(__name__)
+
 
 
 @dataclass

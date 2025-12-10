@@ -8,13 +8,19 @@ Inspired by Goose's Developer extension.
 from __future__ import annotations
 
 import os
+import logging
 import subprocess
-import structlog
 from pathlib import Path
 
 from omniagi.extensions.base import Extension, Tool
 
-logger = structlog.get_logger()
+# Make structlog optional
+try:
+    import structlog
+    logger = structlog.get_logger()
+except ImportError:
+    logger = logging.getLogger(__name__)
+
 
 
 class DeveloperExtension(Extension):

@@ -8,12 +8,18 @@ Inspired by Goose's Computer Controller extension.
 from __future__ import annotations
 
 import json
-import structlog
+import logging
 from urllib.parse import urljoin, urlparse
 
 from omniagi.extensions.base import Extension, Tool
 
-logger = structlog.get_logger()
+# Make structlog optional
+try:
+    import structlog
+    logger = structlog.get_logger()
+except ImportError:
+    logger = logging.getLogger(__name__)
+
 
 # Try to import optional dependencies
 try:

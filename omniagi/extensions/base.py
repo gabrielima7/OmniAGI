@@ -6,12 +6,18 @@ Inspired by Goose's MCP extension architecture.
 
 from __future__ import annotations
 
-import structlog
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-logger = structlog.get_logger()
+# Make structlog optional
+try:
+    import structlog
+    logger = structlog.get_logger()
+except ImportError:
+    logger = logging.getLogger(__name__)
+
 
 
 @dataclass
