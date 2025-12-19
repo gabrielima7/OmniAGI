@@ -11,7 +11,7 @@ cannot guarantee logical consistency.
 from __future__ import annotations
 
 import json
-import structlog
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
@@ -19,7 +19,12 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 from uuid import uuid4
 
-logger = structlog.get_logger()
+# Make structlog optional
+try:
+    import structlog
+    logger = structlog.get_logger()
+except ImportError:
+    logger = logging.getLogger(__name__)
 
 
 class LogicOperator(Enum):

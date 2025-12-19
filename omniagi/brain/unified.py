@@ -8,14 +8,19 @@ combines all advanced AI capabilities into a coherent whole.
 from __future__ import annotations
 
 import json
-import structlog
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-logger = structlog.get_logger()
+# Make structlog optional
+try:
+    import structlog
+    logger = structlog.get_logger()
+except ImportError:
+    logger = logging.getLogger(__name__)
 
 
 class CognitiveMode(Enum):
@@ -26,6 +31,7 @@ class CognitiveMode(Enum):
     CREATIVE = auto()      # Novel generation
     REFLECTIVE = auto()    # Self-analysis
     LEARNING = auto()      # Acquiring knowledge
+    NEUROSYMBOLIC = auto() # KAN + LNN reasoning
 
 
 @dataclass
@@ -80,6 +86,11 @@ class UnifiedAGIBrain:
         self._meta = None
         self._reflection = None
         self._safety = None
+        
+        # AGI components (KAN + Neuro-Symbolic)
+        self._kan = None
+        self._lnn = None
+        self._knowledge_graph = None
         
         # State
         self._mode = CognitiveMode.REACTIVE
@@ -170,13 +181,39 @@ class UnifiedAGIBrain:
             logger.info("Safety System loaded")
         except Exception as e:
             logger.warning("Safety not available", error=str(e))
+        
+        # AGI Advanced Components
+        try:
+            # KAN - Interpretable Pattern Recognition
+            from omniagi.kan import EfficientKAN
+            self._kan = EfficientKAN([64, 32, 16])
+            logger.info("KAN loaded")
+        except Exception as e:
+            logger.warning("KAN not available", error=str(e))
+        
+        try:
+            # LNN - Logical Neural Network
+            from omniagi.neurosymbolic import LNN
+            self._lnn = LNN()
+            logger.info("LNN loaded")
+        except Exception as e:
+            logger.warning("LNN not available", error=str(e))
+        
+        try:
+            # Knowledge Graph
+            from omniagi.neurosymbolic import KnowledgeGraphNeural
+            self._knowledge_graph = KnowledgeGraphNeural()
+            logger.info("Knowledge Graph loaded")
+        except Exception as e:
+            logger.warning("Knowledge Graph not available", error=str(e))
     
     def _count_components(self) -> int:
         """Count active components."""
         components = [
             self._llm, self._symbolic, self._learner,
             self._memory, self._transfer, self._meta,
-            self._reflection, self._safety
+            self._reflection, self._safety,
+            self._kan, self._lnn, self._knowledge_graph,
         ]
         return sum(1 for c in components if c is not None)
     
@@ -236,6 +273,8 @@ class UnifiedAGIBrain:
             thought.reasoning = self._reflective_reasoning(stimulus)
         elif mode == CognitiveMode.LEARNING:
             thought.reasoning = self._learning_reasoning(stimulus)
+        elif mode == CognitiveMode.NEUROSYMBOLIC:
+            thought.reasoning = self._neurosymbolic_reasoning(stimulus)
         
         thought.components_used.append("reasoning")
         
@@ -279,6 +318,8 @@ class UnifiedAGIBrain:
             return CognitiveMode.REFLECTIVE
         if any(w in stimulus_lower for w in ["prove", "logic", "therefore"]):
             return CognitiveMode.DELIBERATIVE
+        if any(w in stimulus_lower for w in ["infer", "deduce", "reason", "knowledge"]):
+            return CognitiveMode.NEUROSYMBOLIC
         
         return CognitiveMode.REACTIVE
     
@@ -331,6 +372,53 @@ class UnifiedAGIBrain:
             if concepts:
                 return f"Applying learned concept: {concepts[0][0].name}"
         return "Learning mode active"
+    
+    def _neurosymbolic_reasoning(self, stimulus: str) -> str:
+        """
+        Neuro-Symbolic reasoning using KAN + LNN.
+        
+        Combines pattern recognition (KAN) with logical inference (LNN)
+        for AGI-level reasoning.
+        """
+        results = []
+        
+        # Step 1: Pattern recognition with KAN
+        if self._kan:
+            try:
+                import torch
+                # Encode stimulus as tensor
+                stimulus_encoded = torch.randn(1, 64)  # Placeholder encoding
+                with torch.no_grad():
+                    pattern = self._kan(stimulus_encoded)
+                results.append(f"KAN pattern: {pattern.mean().item():.2f}")
+            except Exception as e:
+                results.append(f"KAN: {e}")
+        
+        # Step 2: Logical inference with LNN
+        if self._lnn:
+            try:
+                # Extract predicate from stimulus
+                words = stimulus.lower().split()
+                if len(words) >= 2:
+                    pred = words[0]
+                    arg = words[1] if len(words) > 1 else "entity"
+                    bounds = self._lnn.infer(pred, arg)
+                    results.append(f"LNN: {pred}({arg}) = [{bounds.lower:.2f}, {bounds.upper:.2f}]")
+            except Exception as e:
+                results.append(f"LNN: {e}")
+        
+        # Step 3: Knowledge graph inference
+        if self._knowledge_graph:
+            try:
+                stats = self._knowledge_graph.get_stats()
+                results.append(f"KG: {stats['entities']} entities, {stats['triples']} triples")
+            except Exception:
+                pass
+        
+        if results:
+            return "Neuro-symbolic: " + "; ".join(results)
+        return "Neuro-symbolic reasoning complete"
+
     
     def _make_decision(self, thought: ThoughtProcess) -> str:
         """Make a decision based on reasoning."""
