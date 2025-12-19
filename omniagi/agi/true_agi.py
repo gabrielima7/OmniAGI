@@ -176,14 +176,21 @@ class TrueAGI:
             self.zero_shot = None
             logger.warning(f"⚠️ Zero-Shot Transfer not available: {e}")
         
-        # Language Model (RWKV)
+        # Language Model (Hybrid: Cloud APIs + RWKV + Simple)
         try:
-            from omniagi.language.rwkv_model import LanguageModelManager
-            self.language_model = LanguageModelManager()
-            logger.info(f"✅ Language Model loaded ({self.language_model.model_type})")
+            from omniagi.language.cloud_llm import HybridLLM
+            self.language_model = HybridLLM()
+            info = self.language_model.get_info()
+            logger.info(f"✅ Language Model loaded ({info['active_provider']})")
         except Exception as e:
-            self.language_model = None
-            logger.warning(f"⚠️ Language Model not available: {e}")
+            # Fallback to RWKV only
+            try:
+                from omniagi.language.rwkv_model import LanguageModelManager
+                self.language_model = LanguageModelManager()
+                logger.info(f"✅ Language Model loaded (rwkv fallback)")
+            except Exception as e2:
+                self.language_model = None
+                logger.warning(f"⚠️ Language Model not available: {e2}")
         
         # Computer Vision
         try:
