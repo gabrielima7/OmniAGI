@@ -218,6 +218,20 @@ class TrueAGI:
         except Exception as e:
             self.memory = None
             logger.warning(f"⚠️ Memory not available: {e}")
+        
+        # Advanced Reasoning (CoT, RAG, Self-Critique, Tools)
+        try:
+            from omniagi.reasoning.advanced import AdvancedReasoner
+            if self.language_model:
+                self.reasoner = AdvancedReasoner(self.language_model.generate)
+                if self.memory:
+                    self.reasoner.set_memory(self.memory)
+                logger.info("✅ Advanced Reasoner loaded")
+            else:
+                self.reasoner = None
+        except Exception as e:
+            self.reasoner = None
+            logger.warning(f"⚠️ Advanced Reasoner not available: {e}")
     
     def think(self, query: str, context: Dict[str, Any] = None) -> AGIThought:
         """
@@ -417,6 +431,7 @@ class TrueAGI:
                 getattr(self, 'vision', None),
                 getattr(self, 'api_manager', None),
                 getattr(self, 'memory', None),
+                getattr(self, 'reasoner', None),
             ] if x is not None),
             "thoughts_processed": self.thought_count,
         }
@@ -442,6 +457,7 @@ class TrueAGI:
             "vision": 100 if getattr(self, 'vision', None) else 20,
             "external_apis": 100 if getattr(self, 'api_manager', None) else 10,
             "memory": 100 if getattr(self, 'memory', None) else 20,
+            "advanced_reasoning": 100 if getattr(self, 'reasoner', None) else 20,
         }
         
         avg = sum(scores.values()) / len(scores)

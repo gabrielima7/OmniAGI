@@ -224,6 +224,22 @@ def test_all_systems():
         print(f"   ❌ Memory: {e}")
         results['Memory'] = False
 
+    # 15. Advanced Reasoning
+    print("\n1️⃣5️⃣ Advanced Reasoning")
+    try:
+        from omniagi.reasoning.advanced import AdvancedReasoner
+        from omniagi.language.cloud_llm import HybridLLM
+        llm = HybridLLM()
+        reasoner = AdvancedReasoner(llm.generate)
+        
+        # Test CoT
+        result = reasoner.reason("What is 15 + 27?", method="tools")
+        print(f"   ✅ Reasoning: {result.method_used}, answer: {result.answer[:30]}...")
+        results['AdvancedReasoning'] = True
+    except Exception as e:
+        print(f"   ❌ Advanced Reasoning: {e}")
+        results['AdvancedReasoning'] = False
+
     # Summary
     print()
     print("=" * 70)
