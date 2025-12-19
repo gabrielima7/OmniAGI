@@ -269,6 +269,18 @@ def test_all_systems():
         print(f"   ❌ Multi-Agent: {e}")
         results['MultiAgent'] = False
 
+    # 18. Benchmark Suite
+    print("\n1️⃣8️⃣ Benchmark Suite")
+    try:
+        from omniagi.benchmarks import AGIBenchmarkSuite
+        bench = AGIBenchmarkSuite(llm_func=lambda x, y: "2")  # Mock LLM for speed
+        res = bench.run_all(verbose=False)
+        print(f"   ✅ Benchmarks: {res.passed_tests}/{res.total_tests} tests passed")
+        results['Benchmarks'] = True
+    except Exception as e:
+        print(f"   ❌ Benchmarks: {e}")
+        results['Benchmarks'] = False
+
     # Summary
     print()
     print("=" * 70)

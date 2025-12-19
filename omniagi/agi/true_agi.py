@@ -258,6 +258,15 @@ class TrueAGI:
         except Exception as e:
             self.multi_agent = None
             logger.warning(f"⚠️ Multi-Agent not available: {e}")
+
+        # Benchmark Suite (Self-Evaluation)
+        try:
+            from omniagi.benchmarks import AGIBenchmarkSuite
+            self.benchmark_suite = AGIBenchmarkSuite(self)
+            logger.info("✅ Benchmark Suite loaded (Self-Evaluation)")
+        except Exception as e:
+            self.benchmark_suite = None
+            logger.warning(f"⚠️ Benchmark Suite not available: {e}")
     
     def think(self, query: str, context: Dict[str, Any] = None) -> AGIThought:
         """
@@ -462,6 +471,23 @@ class TrueAGI:
                 getattr(self, 'multi_agent', None),
             ] if x is not None),
             "thoughts_processed": self.thought_count,
+        }
+
+    def run_self_evaluation(self) -> Dict[str, Any]:
+        """Run comprehensive self-evaluation benchmarks."""
+        if not self.benchmark_suite:
+            return {"error": "Benchmark suite not available"}
+        
+        result = self.benchmark_suite.run_all()
+        return {
+            "total_score": result.total_score,
+            "avg_score": result.avg_score,
+            "passed": result.passed_tests,
+            "total": result.total_tests,
+            "details": [
+                {"name": r.name, "passed": r.passed, "score": r.score}
+                for r in result.results
+            ]
         }
     
     def evaluate_agi_level(self) -> Dict[str, Any]:

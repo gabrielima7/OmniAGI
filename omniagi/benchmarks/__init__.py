@@ -1,23 +1,21 @@
 """Benchmarks module."""
 
-try:
-    from omniagi.benchmarks.arc import ARCBenchmark, ARCGenerator, ARCTask
-except ImportError:
-    ARCBenchmark = None
-    ARCGenerator = None
-    ARCTask = None
-
-try:
-    from omniagi.benchmarks.arc_v2 import ARCBenchmarkV2, ARCSolverV2
-except ImportError:
-    ARCBenchmarkV2 = None
-    ARCSolverV2 = None
+from omniagi.benchmarks.suite import (
+    AGIBenchmarkSuite,
+    BenchmarkResult,
+    BenchmarkSuiteResult,
+    ReasoningBenchmarks,
+    LearningBenchmarks,
+    GeneralizationBenchmarks,
+    IntegrationBenchmarks,
+)
 
 __all__ = [
-    "ARCBenchmark",
-    "ARCGenerator",
-    "ARCTask",
-    "ARCBenchmarkV2",
-    "ARCSolverV2",
+    "AGIBenchmarkSuite",
+    "BenchmarkResult",
+    "BenchmarkSuiteResult",
+    "ReasoningBenchmarks",
+    "LearningBenchmarks",
+    "GeneralizationBenchmarks",
+    "IntegrationBenchmarks",
 ]
-
