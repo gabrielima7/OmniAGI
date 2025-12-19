@@ -175,6 +175,33 @@ class TrueAGI:
         except Exception as e:
             self.zero_shot = None
             logger.warning(f"⚠️ Zero-Shot Transfer not available: {e}")
+        
+        # Language Model (RWKV)
+        try:
+            from omniagi.language.rwkv_model import LanguageModelManager
+            self.language_model = LanguageModelManager()
+            logger.info(f"✅ Language Model loaded ({self.language_model.model_type})")
+        except Exception as e:
+            self.language_model = None
+            logger.warning(f"⚠️ Language Model not available: {e}")
+        
+        # Computer Vision
+        try:
+            from omniagi.vision.computer_vision import VisionSystem
+            self.vision = VisionSystem()
+            logger.info("✅ Vision System loaded")
+        except Exception as e:
+            self.vision = None
+            logger.warning(f"⚠️ Vision not available: {e}")
+        
+        # External APIs
+        try:
+            from omniagi.api.external import APIManager
+            self.api_manager = APIManager()
+            logger.info("✅ API Manager loaded")
+        except Exception as e:
+            self.api_manager = None
+            logger.warning(f"⚠️ API Manager not available: {e}")
     
     def think(self, query: str, context: Dict[str, Any] = None) -> AGIThought:
         """
@@ -370,6 +397,9 @@ class TrueAGI:
                 getattr(self, 'online_learner', None),
                 getattr(self, 'arc_solver', None),
                 getattr(self, 'zero_shot', None),
+                getattr(self, 'language_model', None),
+                getattr(self, 'vision', None),
+                getattr(self, 'api_manager', None),
             ] if x is not None),
             "thoughts_processed": self.thought_count,
         }
@@ -391,6 +421,9 @@ class TrueAGI:
             "meta_learning": 100 if getattr(self, 'online_learner', None) else 30,
             "abstraction": 100 if getattr(self, 'arc_solver', None) else 30,
             "transfer": 100 if getattr(self, 'zero_shot', None) else 30,
+            "language": 100 if getattr(self, 'language_model', None) else 20,
+            "vision": 100 if getattr(self, 'vision', None) else 20,
+            "external_apis": 100 if getattr(self, 'api_manager', None) else 10,
         }
         
         avg = sum(scores.values()) / len(scores)
