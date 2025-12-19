@@ -194,6 +194,59 @@ class OpenRouterClient:
             return LLMResponse("", "", 0, False, str(e))
 
 
+class GeminiClient:
+    """
+    Google Gemini API client.
+    
+    Use Google AI Studio for FREE API access!
+    Get your key at: https://aistudio.google.com/apikey
+    Set GOOGLE_API_KEY environment variable.
+    """
+    
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key or os.environ.get("GOOGLE_API_KEY")
+        self.base_url = "https://generativelanguage.googleapis.com/v1beta"
+        self.default_model = "gemini-1.5-flash"  # Fast and capable
+    
+    def generate(self, prompt: str, max_tokens: int = 200, temperature: float = 0.7) -> LLMResponse:
+        """Generate text using Google Gemini."""
+        if not HTTPX_AVAILABLE:
+            return LLMResponse("", "", 0, False, "httpx not available")
+        
+        if not self.api_key:
+            return LLMResponse("", "", 0, False, "GOOGLE_API_KEY not set")
+        
+        try:
+            url = f"{self.base_url}/models/{self.default_model}:generateContent?key={self.api_key}"
+            
+            with httpx.Client(timeout=30.0) as client:
+                response = client.post(
+                    url,
+                    headers={"Content-Type": "application/json"},
+                    json={
+                        "contents": [{"parts": [{"text": prompt}]}],
+                        "generationConfig": {
+                            "maxOutputTokens": max_tokens,
+                            "temperature": temperature,
+                        },
+                    },
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        text = candidates[0]["content"]["parts"][0]["text"]
+                        tokens = data.get("usageMetadata", {}).get("totalTokenCount", 0)
+                        return LLMResponse(text, self.default_model, tokens, True)
+                    return LLMResponse("", "", 0, False, "No candidates returned")
+                else:
+                    return LLMResponse("", "", 0, False, response.text)
+                    
+        except Exception as e:
+            return LLMResponse("", "", 0, False, str(e))
+
+
 class OllamaClient:
     """
     Ollama client - Run models locally with optimization.
@@ -253,13 +306,17 @@ class HybridLLM:
     Hybrid LLM that uses best available provider.
     
     Priority:
-    1. Cloud APIs (Groq, Together, OpenRouter) - Powerful models
-    2. Ollama (local optimized)
-    3. RWKV local
-    4. Simple fallback
+    1. Gemini (Google AI Studio - FREE!)
+    2. Groq (FREE, fast)
+    3. Together AI
+    4. OpenRouter
+    5. Ollama (local optimized)
+    6. RWKV local
+    7. Simple fallback
     """
     
     def __init__(self):
+        self.gemini = GeminiClient()
         self.groq = GroqClient()
         self.together = TogetherClient()
         self.openrouter = OpenRouterClient()
@@ -277,7 +334,9 @@ class HybridLLM:
     
     def _detect_best_provider(self) -> str:
         """Detect best available provider."""
-        # Check cloud APIs
+        # Check cloud APIs - Gemini first!
+        if self.gemini.api_key:
+            return "gemini"
         if self.groq.api_key:
             return "groq"
         if self.together.api_key:
@@ -296,6 +355,11 @@ class HybridLLM:
     
     def generate(self, prompt: str, max_tokens: int = 200, temperature: float = 0.7) -> str:
         """Generate text using best available provider."""
+        
+        if self.active_provider == "gemini":
+            response = self.gemini.generate(prompt, max_tokens, temperature)
+            if response.success:
+                return response.text
         
         if self.active_provider == "groq":
             response = self.groq.generate(prompt, max_tokens, temperature)
@@ -320,7 +384,7 @@ class HybridLLM:
         if self.rwkv:
             return self.rwkv.generate(prompt, max_tokens)
         
-        return f"[No LLM available. Set GROQ_API_KEY for free access to LLaMA-70B]"
+        return f"[No LLM available. Set GOOGLE_API_KEY for Gemini access]"
     
     def answer(self, question: str, context: str = "") -> str:
         """Answer a question."""
@@ -344,6 +408,7 @@ Let me solve this step by step:
         return {
             "active_provider": self.active_provider,
             "providers_available": {
+                "gemini": bool(self.gemini.api_key),
                 "groq": bool(self.groq.api_key),
                 "together": bool(self.together.api_key),
                 "openrouter": bool(self.openrouter.api_key),
@@ -355,6 +420,8 @@ Let me solve this step by step:
     
     def _get_current_model(self) -> str:
         """Get current model name."""
+        if self.active_provider == "gemini":
+            return self.gemini.default_model
         if self.active_provider == "groq":
             return self.groq.default_model
         if self.active_provider == "together":
