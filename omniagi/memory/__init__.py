@@ -1,7 +1,15 @@
-"""Memory module - Agent memory systems."""
+"""Memory module."""
 
-from omniagi.memory.working import WorkingMemory
-from omniagi.memory.episodic import EpisodicMemory
-from omniagi.memory.vector import VectorStore
+from omniagi.memory.persistent import (
+    Memory,
+    PersistentMemory,
+    WorkingMemory,
+    MemorySystem,
+)
 
-__all__ = ["WorkingMemory", "EpisodicMemory", "VectorStore"]
+__all__ = [
+    "Memory",
+    "PersistentMemory",
+    "WorkingMemory",
+    "MemorySystem",
+]

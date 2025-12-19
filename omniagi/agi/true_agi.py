@@ -209,6 +209,15 @@ class TrueAGI:
         except Exception as e:
             self.api_manager = None
             logger.warning(f"⚠️ API Manager not available: {e}")
+        
+        # Persistent Memory
+        try:
+            from omniagi.memory.persistent import MemorySystem
+            self.memory = MemorySystem()
+            logger.info(f"✅ Memory System loaded ({self.memory.persistent.count()} memories)")
+        except Exception as e:
+            self.memory = None
+            logger.warning(f"⚠️ Memory not available: {e}")
     
     def think(self, query: str, context: Dict[str, Any] = None) -> AGIThought:
         """
@@ -407,6 +416,7 @@ class TrueAGI:
                 getattr(self, 'language_model', None),
                 getattr(self, 'vision', None),
                 getattr(self, 'api_manager', None),
+                getattr(self, 'memory', None),
             ] if x is not None),
             "thoughts_processed": self.thought_count,
         }
@@ -431,6 +441,7 @@ class TrueAGI:
             "language": 100 if getattr(self, 'language_model', None) else 20,
             "vision": 100 if getattr(self, 'vision', None) else 20,
             "external_apis": 100 if getattr(self, 'api_manager', None) else 10,
+            "memory": 100 if getattr(self, 'memory', None) else 20,
         }
         
         avg = sum(scores.values()) / len(scores)
