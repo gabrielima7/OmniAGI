@@ -116,7 +116,6 @@ class RWKVInterface:
                 top_k=config.top_k,
                 alpha_frequency=config.frequency_penalty,
                 alpha_presence=config.presence_penalty,
-                token_count=config.max_tokens,
             )
             
             output = self.pipeline.generate(
