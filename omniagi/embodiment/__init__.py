@@ -3,6 +3,12 @@
 from omniagi.embodiment.sim_env import SimulationEnvironment, PhysicsEngine
 from omniagi.embodiment.sensory import SensoryProcessor, SensorReading
 from omniagi.embodiment.actuator import ActuatorController, Action
+from omniagi.embodiment.simulation import (
+    EmbodimentInterface,
+    EmbodiedAgent,
+    WorldObject,
+    Vector3,
+)
 
 __all__ = [
     "SimulationEnvironment",
@@ -11,4 +17,9 @@ __all__ = [
     "SensorReading",
     "ActuatorController",
     "Action",
+    "EmbodimentInterface",
+    "EmbodiedAgent",
+    "WorldObject",
+    "Vector3",
 ]
+

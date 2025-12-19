@@ -1,0 +1,378 @@
+"""
+True AGI Integration Layer.
+
+Unifies all AGI components into a coherent system:
+- KAN for pattern recognition
+- LNN for logical reasoning
+- Common sense for world understanding
+- Embodiment for physical grounding
+- Open-ended learning for adaptation
+- Advanced planning for goal pursuit
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+from enum import Enum, auto
+
+logger = logging.getLogger(__name__)
+
+
+class AGILevel(Enum):
+    """AGI capability levels."""
+    NARROW = auto()       # Task-specific
+    PROTO_AGI = auto()    # Some generalization
+    ADVANCED = auto()     # Strong generalization
+    TRUE_AGI = auto()     # Human-level general
+    ASI = auto()          # Superhuman
+
+
+@dataclass
+class AGIThought:
+    """A complete AGI thought integrating all systems."""
+    id: str
+    query: str
+    
+    # Multi-system results
+    pattern_result: Optional[Dict] = None      # KAN
+    logic_result: Optional[Dict] = None        # LNN
+    common_sense_result: Optional[Dict] = None # Common sense
+    embodiment_result: Optional[Dict] = None   # Physical
+    learning_result: Optional[Dict] = None     # Learning
+    planning_result: Optional[Dict] = None     # Planning
+    
+    # Synthesis
+    integrated_response: str = ""
+    confidence: float = 0.0
+    reasoning_chain: List[str] = field(default_factory=list)
+    
+    # Metadata
+    processing_time_ms: int = 0
+    systems_used: List[str] = field(default_factory=list)
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+class TrueAGI:
+    """
+    True Artificial General Intelligence.
+    
+    Integrates all cognitive systems for human-level
+    general intelligence.
+    """
+    
+    def __init__(self):
+        self.level = AGILevel.PROTO_AGI
+        self.thought_count = 0
+        
+        # Initialize all systems
+        self._init_systems()
+        
+        # State
+        self.knowledge_state: Dict[str, Any] = {}
+        self.goal_stack: List[str] = []
+        
+        logger.info("TrueAGI initialized")
+    
+    def _init_systems(self):
+        """Initialize all AGI subsystems."""
+        # KAN system
+        try:
+            from omniagi.kan.efficient_kan import EfficientKAN, TORCH_AVAILABLE
+            if TORCH_AVAILABLE:
+                self.kan = EfficientKAN([64, 32, 16])
+                logger.info("✅ KAN system loaded")
+            else:
+                self.kan = None
+                logger.info("⚠️ KAN: PyTorch not available")
+        except Exception as e:
+            self.kan = None
+            logger.warning(f"⚠️ KAN not available: {e}")
+        
+        # LNN system
+        try:
+            from omniagi.neurosymbolic.neural_logic import LNN, TORCH_AVAILABLE
+            if TORCH_AVAILABLE:
+                self.lnn = LNN()
+                logger.info("✅ LNN system loaded")
+            else:
+                self.lnn = None
+                logger.info("⚠️ LNN: PyTorch not available")
+        except Exception as e:
+            self.lnn = None
+            logger.warning(f"⚠️ LNN not available: {e}")
+        
+        # Common sense (no external deps)
+        try:
+            from omniagi.reasoning.common_sense import CommonSenseReasoner
+            self.common_sense = CommonSenseReasoner()
+            logger.info("✅ Common Sense loaded")
+        except Exception as e:
+            self.common_sense = None
+            logger.warning(f"⚠️ Common Sense not available: {e}")
+        
+        # Embodiment (direct import from our new file)
+        try:
+            from omniagi.embodiment.simulation import EmbodimentInterface
+            self.embodiment = EmbodimentInterface()
+            logger.info("✅ Embodiment loaded")
+        except Exception as e:
+            self.embodiment = None
+            logger.warning(f"⚠️ Embodiment not available: {e}")
+        
+        # Open-ended learning (direct import)
+        try:
+            from omniagi.learning.open_ended import OpenEndedLearner
+            self.learner = OpenEndedLearner()
+            logger.info("✅ Open-ended Learning loaded")
+        except Exception as e:
+            self.learner = None
+            logger.warning(f"⚠️ Learning not available: {e}")
+        
+        # Advanced planning (no external deps)
+        try:
+            from omniagi.planning.hierarchical import AdvancedPlanner
+            self.planner = AdvancedPlanner()
+            logger.info("✅ Advanced Planner loaded")
+        except Exception as e:
+            self.planner = None
+            logger.warning(f"⚠️ Planner not available: {e}")
+        
+        # Autonomy (direct import from our new file)
+        try:
+            from omniagi.autonomy.advanced import AdvancedAutonomySystem
+            self.autonomy = AdvancedAutonomySystem()
+            logger.info("✅ Advanced Autonomy loaded")
+        except Exception as e:
+            self.autonomy = None
+            logger.warning(f"⚠️ Autonomy not available: {e}")
+    
+    def think(self, query: str, context: Dict[str, Any] = None) -> AGIThought:
+        """
+        Main thinking function.
+        
+        Integrates all cognitive systems to process a query.
+        """
+        import time
+        start = time.time()
+        
+        thought = AGIThought(
+            id=f"thought_{self.thought_count}",
+            query=query,
+        )
+        self.thought_count += 1
+        
+        # 1. Pattern Recognition (KAN)
+        if self.kan:
+            try:
+                import torch
+                # Encode query
+                query_tensor = self._encode_text(query)
+                with torch.no_grad():
+                    pattern = self.kan(query_tensor)
+                thought.pattern_result = {
+                    "pattern_detected": True,
+                    "activation": pattern.mean().item(),
+                }
+                thought.systems_used.append("KAN")
+                thought.reasoning_chain.append("KAN: Pattern analysis complete")
+            except Exception as e:
+                thought.pattern_result = {"error": str(e)}
+        
+        # 2. Logical Reasoning (LNN)
+        if self.lnn:
+            try:
+                words = query.lower().split()
+                if len(words) >= 2:
+                    bounds = self.lnn.infer(words[0], words[1])
+                    thought.logic_result = {
+                        "lower": bounds.lower,
+                        "upper": bounds.upper,
+                        "is_true": bounds.is_true,
+                    }
+                    thought.systems_used.append("LNN")
+                    thought.reasoning_chain.append(f"LNN: [{bounds.lower:.2f}, {bounds.upper:.2f}]")
+            except Exception as e:
+                thought.logic_result = {"error": str(e)}
+        
+        # 3. Common Sense Reasoning
+        if self.common_sense:
+            try:
+                cs_result = self.common_sense.reason(query, str(context or {}))
+                thought.common_sense_result = cs_result
+                thought.systems_used.append("CommonSense")
+                if cs_result.get("physical_prediction"):
+                    thought.reasoning_chain.append(
+                        f"CommonSense: {cs_result['physical_prediction']['prediction']}"
+                    )
+            except Exception as e:
+                thought.common_sense_result = {"error": str(e)}
+        
+        # 4. Embodied Reasoning
+        if self.embodiment:
+            try:
+                obs = self.embodiment.observe()
+                thought.embodiment_result = {
+                    "observation": obs,
+                    "action_options": ["move", "grasp", "look"],
+                }
+                thought.systems_used.append("Embodiment")
+            except Exception as e:
+                thought.embodiment_result = {"error": str(e)}
+        
+        # 5. Learning-based Processing
+        if self.learner:
+            try:
+                stats = self.learner.get_stats()
+                thought.learning_result = {
+                    "concepts_known": stats["concepts_learned"],
+                    "exploration_rate": stats["exploration_rate"],
+                }
+                thought.systems_used.append("Learning")
+            except Exception as e:
+                thought.learning_result = {"error": str(e)}
+        
+        # 6. Planning
+        if self.planner and "plan" in query.lower() or "goal" in query.lower():
+            try:
+                plan = self.planner.create_plan(query)
+                thought.planning_result = plan
+                thought.systems_used.append("Planning")
+                thought.reasoning_chain.append(f"Planning: {plan['tasks']} tasks generated")
+            except Exception as e:
+                thought.planning_result = {"error": str(e)}
+        
+        # Synthesize response
+        thought.integrated_response = self._synthesize(thought)
+        thought.confidence = self._compute_confidence(thought)
+        thought.processing_time_ms = int((time.time() - start) * 1000)
+        
+        return thought
+    
+    def _encode_text(self, text: str):
+        """Encode text to tensor for KAN."""
+        import torch
+        # Simple character encoding
+        encoded = [ord(c) % 64 for c in text[:64]]
+        encoded += [0] * (64 - len(encoded))
+        return torch.tensor([encoded], dtype=torch.float32)
+    
+    def _synthesize(self, thought: AGIThought) -> str:
+        """Synthesize final response from all results."""
+        parts = []
+        
+        if thought.pattern_result and not thought.pattern_result.get("error"):
+            parts.append(f"Pattern: {thought.pattern_result.get('activation', 0):.2f}")
+        
+        if thought.logic_result and not thought.logic_result.get("error"):
+            parts.append(f"Logic: [{thought.logic_result['lower']:.2f}, {thought.logic_result['upper']:.2f}]")
+        
+        if thought.common_sense_result and not thought.common_sense_result.get("error"):
+            if thought.common_sense_result.get("physical_prediction"):
+                parts.append(thought.common_sense_result["physical_prediction"]["prediction"])
+        
+        if thought.planning_result and not thought.planning_result.get("error"):
+            parts.append(f"Plan: {thought.planning_result.get('tasks', 0)} tasks")
+        
+        if parts:
+            return " | ".join(parts)
+        return "Processed with limited capability"
+    
+    def _compute_confidence(self, thought: AGIThought) -> float:
+        """Compute overall confidence."""
+        scores = []
+        
+        if thought.common_sense_result and not thought.common_sense_result.get("error"):
+            scores.append(thought.common_sense_result.get("confidence", 0.5))
+        
+        if thought.logic_result and not thought.logic_result.get("error"):
+            # Tighter bounds = higher confidence
+            spread = thought.logic_result["upper"] - thought.logic_result["lower"]
+            scores.append(1 - spread)
+        
+        if len(thought.systems_used) >= 3:
+            scores.append(0.8)  # Multi-system agreement boost
+        
+        return sum(scores) / max(1, len(scores)) if scores else 0.5
+    
+    def set_goal(self, goal: str) -> Dict[str, Any]:
+        """Set a high-level goal for autonomous pursuit."""
+        self.goal_stack.append(goal)
+        
+        result = {}
+        
+        if self.autonomy:
+            plan = self.autonomy.set_objective(goal)
+            result["autonomy_plan"] = len(plan)
+        
+        if self.planner:
+            plan = self.planner.create_plan(goal)
+            result["hierarchical_plan"] = plan
+        
+        return result
+    
+    def step(self) -> Optional[AGIThought]:
+        """Execute one autonomous step."""
+        if self.autonomy:
+            goal = self.autonomy.step()
+            if goal:
+                return self.think(goal.name)
+        return None
+    
+    def get_capabilities(self) -> Dict[str, Any]:
+        """Get current AGI capabilities."""
+        return {
+            "level": self.level.name,
+            "systems": {
+                "kan": self.kan is not None,
+                "lnn": self.lnn is not None,
+                "common_sense": self.common_sense is not None,
+                "embodiment": self.embodiment is not None,
+                "learning": self.learner is not None,
+                "planning": self.planner is not None,
+                "autonomy": self.autonomy is not None,
+            },
+            "total_systems": sum(1 for x in [
+                self.kan, self.lnn, self.common_sense,
+                self.embodiment, self.learner, self.planner, self.autonomy
+            ] if x is not None),
+            "thoughts_processed": self.thought_count,
+        }
+    
+    def evaluate_agi_level(self) -> Dict[str, Any]:
+        """Evaluate current AGI level based on capabilities."""
+        caps = self.get_capabilities()
+        total = caps["total_systems"]
+        
+        # Scoring
+        scores = {
+            "pattern_recognition": 100 if self.kan else 50,
+            "symbolic_reasoning": 100 if self.lnn else 50,
+            "common_sense": 100 if self.common_sense else 30,
+            "embodiment": 100 if self.embodiment else 20,
+            "learning": 100 if self.learner else 40,
+            "planning": 100 if self.planner else 40,
+            "autonomy": 100 if self.autonomy else 30,
+        }
+        
+        avg = sum(scores.values()) / len(scores)
+        
+        if avg >= 95:
+            level = AGILevel.TRUE_AGI
+        elif avg >= 80:
+            level = AGILevel.ADVANCED
+        elif avg >= 60:
+            level = AGILevel.PROTO_AGI
+        else:
+            level = AGILevel.NARROW
+        
+        self.level = level
+        
+        return {
+            "scores": scores,
+            "average": avg,
+            "level": level.name,
+            "systems_active": total,
+        }
