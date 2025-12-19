@@ -8,7 +8,12 @@ AI grounding and learning through interaction.
 from __future__ import annotations
 
 import json
-import structlog
+import logging
+
+try:
+    import structlog
+except ImportError:
+    structlog = None
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -17,7 +22,7 @@ from pathlib import Path
 from typing import Any, Callable
 from uuid import uuid4
 
-logger = structlog.get_logger()
+logger = structlog.get_logger() if structlog else logging.getLogger(__name__)
 
 
 class PhysicsBackend(Enum):

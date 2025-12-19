@@ -8,6 +8,13 @@ and self-directed learning for AGI.
 from __future__ import annotations
 
 import logging
+
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    np = None
 import random
 import math
 from dataclasses import dataclass, field

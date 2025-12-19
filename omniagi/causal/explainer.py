@@ -7,14 +7,19 @@ enabling transparency and debuggability.
 
 from __future__ import annotations
 
-import structlog
+import logging
+
+try:
+    import structlog
+except ImportError:
+    structlog = None
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
 from omniagi.causal.graph import CausalGraph, CausalNode
 
-logger = structlog.get_logger()
+logger = structlog.get_logger() if structlog else logging.getLogger(__name__)
 
 
 @dataclass

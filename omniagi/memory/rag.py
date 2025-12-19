@@ -13,9 +13,14 @@ from pathlib import Path
 from typing import Any, Optional
 from uuid import uuid4
 
-import structlog
+import logging
 
-logger = structlog.get_logger()
+try:
+    import structlog
+except ImportError:
+    structlog = None
+
+logger = structlog.get_logger() if structlog else logging.getLogger(__name__)
 
 
 class RAGSystem:

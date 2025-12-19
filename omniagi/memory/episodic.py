@@ -5,13 +5,18 @@ Episodic memory - Long-term experience storage.
 from __future__ import annotations
 
 import json
-import structlog
+import logging
+
+try:
+    import structlog
+except ImportError:
+    structlog = None
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-logger = structlog.get_logger()
+logger = structlog.get_logger() if structlog else logging.getLogger(__name__)
 
 
 @dataclass

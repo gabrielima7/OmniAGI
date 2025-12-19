@@ -9,7 +9,12 @@ from __future__ import annotations
 
 import json
 import random
-import structlog
+import logging
+
+try:
+    import structlog
+except ImportError:
+    structlog = None
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
@@ -21,7 +26,7 @@ if TYPE_CHECKING:
     from omniagi.core.engine import Engine
     from omniagi.continual import KnowledgeGraph
 
-logger = structlog.get_logger()
+logger = structlog.get_logger() if structlog else logging.getLogger(__name__)
 
 
 class GoalSource(Enum):

@@ -9,7 +9,12 @@ from __future__ import annotations
 
 import json
 import hashlib
-import structlog
+import logging
+
+try:
+    import structlog
+except ImportError:
+    structlog = None
 import subprocess
 import tempfile
 import threading
@@ -20,7 +25,7 @@ from pathlib import Path
 from typing import Any, Callable
 from contextlib import contextmanager
 
-logger = structlog.get_logger()
+logger = structlog.get_logger() if structlog else logging.getLogger(__name__)
 
 
 class ThreatLevel(Enum):
