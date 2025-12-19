@@ -148,6 +148,33 @@ class TrueAGI:
         except Exception as e:
             self.autonomy = None
             logger.warning(f"⚠️ Autonomy not available: {e}")
+        
+        # Online Learning (MAML + EWC)
+        try:
+            from omniagi.learning.online import RealAGILearner
+            self.online_learner = RealAGILearner(64, 128, 32)
+            logger.info("✅ Online Learning loaded")
+        except Exception as e:
+            self.online_learner = None
+            logger.warning(f"⚠️ Online Learning not available: {e}")
+        
+        # ARC Benchmark Solver
+        try:
+            from omniagi.benchmarks.arc_v2 import ARCBenchmarkV2, ARCSolverV2
+            self.arc_solver = ARCSolverV2()
+            logger.info("✅ ARC Solver loaded")
+        except Exception as e:
+            self.arc_solver = None
+            logger.warning(f"⚠️ ARC Solver not available: {e}")
+        
+        # Zero-Shot Transfer
+        try:
+            from omniagi.transfer.zero_shot import ZeroShotTransferSystem
+            self.zero_shot = ZeroShotTransferSystem()
+            logger.info("✅ Zero-Shot Transfer loaded")
+        except Exception as e:
+            self.zero_shot = None
+            logger.warning(f"⚠️ Zero-Shot Transfer not available: {e}")
     
     def think(self, query: str, context: Dict[str, Any] = None) -> AGIThought:
         """
@@ -333,10 +360,16 @@ class TrueAGI:
                 "learning": self.learner is not None,
                 "planning": self.planner is not None,
                 "autonomy": self.autonomy is not None,
+                "online_learning": getattr(self, 'online_learner', None) is not None,
+                "arc_solver": getattr(self, 'arc_solver', None) is not None,
+                "zero_shot": getattr(self, 'zero_shot', None) is not None,
             },
             "total_systems": sum(1 for x in [
                 self.kan, self.lnn, self.common_sense,
-                self.embodiment, self.learner, self.planner, self.autonomy
+                self.embodiment, self.learner, self.planner, self.autonomy,
+                getattr(self, 'online_learner', None),
+                getattr(self, 'arc_solver', None),
+                getattr(self, 'zero_shot', None),
             ] if x is not None),
             "thoughts_processed": self.thought_count,
         }
@@ -346,7 +379,7 @@ class TrueAGI:
         caps = self.get_capabilities()
         total = caps["total_systems"]
         
-        # Scoring
+        # Scoring - now includes all real AGI capabilities
         scores = {
             "pattern_recognition": 100 if self.kan else 50,
             "symbolic_reasoning": 100 if self.lnn else 50,
@@ -355,6 +388,9 @@ class TrueAGI:
             "learning": 100 if self.learner else 40,
             "planning": 100 if self.planner else 40,
             "autonomy": 100 if self.autonomy else 30,
+            "meta_learning": 100 if getattr(self, 'online_learner', None) else 30,
+            "abstraction": 100 if getattr(self, 'arc_solver', None) else 30,
+            "transfer": 100 if getattr(self, 'zero_shot', None) else 30,
         }
         
         avg = sum(scores.values()) / len(scores)
@@ -376,3 +412,53 @@ class TrueAGI:
             "level": level.name,
             "systems_active": total,
         }
+    
+    def learn_online(self, input_data: Any, target: Any, task_id: str = "default") -> float:
+        """Learn from a single example online."""
+        if not getattr(self, 'online_learner', None):
+            return 0.0
+        
+        from omniagi.learning.online import TrainingExample
+        example = TrainingExample(
+            input_data=input_data,
+            target=target,
+            task_id=task_id,
+        )
+        
+        return self.online_learner.learn_example(example)
+    
+    def solve_arc_task(self, task_data: Dict) -> Dict[str, Any]:
+        """Solve an ARC task."""
+        if not getattr(self, 'arc_solver', None):
+            return {"error": "ARC solver not available"}
+        
+        from omniagi.benchmarks.arc_v2 import ARCTask
+        task = ARCTask(
+            task_id=task_data.get('id', 'unknown'),
+            train_examples=task_data.get('train', []),
+            test_examples=task_data.get('test', []),
+        )
+        
+        predictions = self.arc_solver.solve(task)
+        return {
+            "task_id": task.task_id,
+            "predictions": len(predictions),
+            "stats": self.arc_solver.get_stats(),
+        }
+    
+    def zero_shot_transfer(self, task_description: str, input_data: Any) -> Any:
+        """Solve a new task using zero-shot transfer."""
+        if not getattr(self, 'zero_shot', None):
+            return None
+        
+        from omniagi.transfer.zero_shot import Task
+        new_task = Task(
+            id="new_task",
+            name=task_description,
+            description=task_description,
+            input_type=type(input_data).__name__,
+            output_type="unknown",
+        )
+        
+        return self.zero_shot.zero_shot_solve(new_task, input_data)
+
