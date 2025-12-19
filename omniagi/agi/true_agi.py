@@ -232,6 +232,32 @@ class TrueAGI:
         except Exception as e:
             self.reasoner = None
             logger.warning(f"⚠️ Advanced Reasoner not available: {e}")
+        
+        # Agent Loop (Autonomous OBSERVE-THINK-ACT-EVALUATE)
+        try:
+            from omniagi.agents.loop import ReactAgent
+            if self.language_model:
+                memory_func = self.memory.recall if self.memory else None
+                self.agent_loop = ReactAgent(self.language_model.generate, memory_func)
+                logger.info("✅ Agent Loop loaded (ReAct)")
+            else:
+                self.agent_loop = None
+        except Exception as e:
+            self.agent_loop = None
+            logger.warning(f"⚠️ Agent Loop not available: {e}")
+        
+        # Multi-Agent System
+        try:
+            from omniagi.agents.multi_agent import MultiAgentSystem
+            if self.language_model:
+                memory_func = self.memory.recall if self.memory else None
+                self.multi_agent = MultiAgentSystem(self.language_model.generate, memory_func)
+                logger.info("✅ Multi-Agent System loaded")
+            else:
+                self.multi_agent = None
+        except Exception as e:
+            self.multi_agent = None
+            logger.warning(f"⚠️ Multi-Agent not available: {e}")
     
     def think(self, query: str, context: Dict[str, Any] = None) -> AGIThought:
         """
@@ -432,6 +458,8 @@ class TrueAGI:
                 getattr(self, 'api_manager', None),
                 getattr(self, 'memory', None),
                 getattr(self, 'reasoner', None),
+                getattr(self, 'agent_loop', None),
+                getattr(self, 'multi_agent', None),
             ] if x is not None),
             "thoughts_processed": self.thought_count,
         }
@@ -458,6 +486,8 @@ class TrueAGI:
             "external_apis": 100 if getattr(self, 'api_manager', None) else 10,
             "memory": 100 if getattr(self, 'memory', None) else 20,
             "advanced_reasoning": 100 if getattr(self, 'reasoner', None) else 20,
+            "agent_loop": 100 if getattr(self, 'agent_loop', None) else 20,
+            "multi_agent": 100 if getattr(self, 'multi_agent', None) else 20,
         }
         
         avg = sum(scores.values()) / len(scores)

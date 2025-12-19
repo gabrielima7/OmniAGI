@@ -240,6 +240,35 @@ def test_all_systems():
         print(f"   ❌ Advanced Reasoning: {e}")
         results['AdvancedReasoning'] = False
 
+    # 16. Agent Loop
+    print("\n1️⃣6️⃣ Agent Loop (ReAct)")
+    try:
+        from omniagi.agents.loop import ReactAgent
+        from omniagi.language.cloud_llm import HybridLLM
+        llm = HybridLLM()
+        agent = ReactAgent(llm.generate)
+        agent.set_goal("Answer a question")
+        step = agent.step("What is 2+2?")
+        print(f"   ✅ Agent: step {step.step_number}, action: {step.action.action_type}")
+        results['AgentLoop'] = True
+    except Exception as e:
+        print(f"   ❌ Agent Loop: {e}")
+        results['AgentLoop'] = False
+
+    # 17. Multi-Agent System
+    print("\n1️⃣7️⃣ Multi-Agent System")
+    try:
+        from omniagi.agents.multi_agent import MultiAgentSystem
+        from omniagi.language.cloud_llm import HybridLLM
+        llm = HybridLLM()
+        mas = MultiAgentSystem(llm.generate)
+        stats = mas.get_stats()
+        print(f"   ✅ Multi-Agent: {len(stats['agents'])} agents available")
+        results['MultiAgent'] = True
+    except Exception as e:
+        print(f"   ❌ Multi-Agent: {e}")
+        results['MultiAgent'] = False
+
     # Summary
     print()
     print("=" * 70)
